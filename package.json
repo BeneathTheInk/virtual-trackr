@@ -1,0 +1,12 @@
+{
+  "main": "lib/index.js",
+  "dependencies": {
+    "backbone-events-standalone": "^0.2.7",
+    "backbone-extend-standalone": "^0.1.2",
+    "jsondiffpatch": "^0.1.33",
+    "matches-selector": "^1.0.0",
+    "trackr": "^1.0.3",
+    "underscore": "^1.8.3",
+    "virtual-dom": "^2.0.1"
+  }
+}
