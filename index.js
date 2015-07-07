@@ -1,9 +1,15 @@
-var Trackr = require("trackr");
+var Trackr;
 var VText = require("virtual-dom/vnode/vtext");
 var createElement = require('virtual-dom/create-element');
 var diff = require('virtual-dom/diff');
 var patch = require('virtual-dom/patch');
 var matchesSelector = require("matches-selector");
+
+try {
+	Trackr = require("trackr");
+} catch(e) {
+	Trackr = global.Trackr;
+}
 
 function VTrackr(fn) {
 	if (!(this instanceof VTrackr)) return new VTrackr(fn);
