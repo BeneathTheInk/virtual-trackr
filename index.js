@@ -8,30 +8,8 @@ var matchesSelector = require("matches-selector");
 
 function VTrackr(fn) {
 	if (!(this instanceof VTrackr)) return new VTrackr(fn);
-
-	this._tree = null;
-	this._node = null;
 	if (typeof fn === "function") this.render = fn;
-
-	this.comp = Trackr.autorun(function(comp) {
-		var newtree = this.render.call(this, comp),
-			oldNode;
-
-		if (typeof newtree === "string") {
-			newtree = new VText(newtree);
-		}
-
-		if (this._node) {
-			var oldNode = this._node;
-			this._node = patch(oldNode, diff(this._tree, newtree));
-
-			if (this._node !== oldNode && oldNode.parentNode) {
-				oldNode.parentNode.replaceChild(this._node, oldNode);
-			}
-		}
-
-		this._tree = newtree;
-	}, this);
+	this.mount();
 }
 
 module.exports = VTrackr;
@@ -40,19 +18,91 @@ VTrackr.extend = require("backbone-extend-standalone");
 _.extend(VTrackr.prototype, {
 	type: "Widget",
 
+	autorun: function(fn) {
+		return Trackr.autorun(fn, this);
+	},
+
+	mount: function() {
+		if (this.comp) this.stop();
+
+		this.comp = this.autorun(function(comp) {
+			var newtree = this.render.call(this, comp),
+				oldNode;
+
+			if (typeof newtree === "string") {
+				newtree = new VText(newtree);
+			}
+
+			this._latestTree = newtree;
+			if (this.node) this.updateNode();
+
+			comp.onInvalidate(function() {
+				if (comp.stopped) {
+					this._latestTree = null;
+					delete this.comp;
+				}
+			});
+		});
+
+		return this;
+	},
+
+	stop: function() {
+		if (this.comp) this.comp.stop();
+		return this;
+	},
+
+	updateNode: function() {
+		// must have changed
+		if (!this._latestTree) return this;
+
+		// create a new node if none is set
+		if (!this.node || !this._tree) {
+			this.node = createElement(this._latestTree);
+		}
+
+		// otherwise patch and apply new tree
+		else {
+			var oldNode = this.node;
+			this.node = patch(oldNode, diff(this._tree, this._latestTree));
+
+			if (this.node !== oldNode && oldNode.parentNode) {
+				oldNode.parentNode.replaceChild(this.node, oldNode);
+			}
+		}
+
+		this._tree = this._latestTree;
+		this._latestTree = null;
+
+		return this;
+	},
+
 	init: function() {
-		return this._node = createElement(this._tree);
+		this.updateNode();
+		return this.node;
 	},
 
 	update: function(previous, node) {
 		var prevtree = previous && previous._tree;
-		if (!prevtree) return this.init();
-		return this._node = patch(node, diff(prevtree, this._tree));
+		if (!prevtree || !node) return this.init();
+
+		// basically, don't be switching trees without calling destroy
+		if (this.node && this.node !== node) {
+			throw new Error("This VTrackr was already initated with a different node.");
+		}
+
+		// update internal state and update the node
+		this.node = node;
+		if (!this._latestTree) this._latestTree = this._tree;
+		this._tree = prevtree;
+		this.updateNode();
+
+		return this.node;
 	},
 
 	destroy: function(node) {
-		this.comp.stop();
-		this._node = null;
+		this.stop();
+		this.node = null;
 		this._tree = null;
 	},
 
@@ -66,7 +116,7 @@ _.extend(VTrackr.prototype, {
 
 	findAll: function(selector) {
 		var matches = [],
-			el = this._node;
+			el = this.node;
 
 		if (el) {
 			if (el.nodeType === 1 && matchesSelector(el, selector)) matches.push(el);
@@ -79,7 +129,7 @@ _.extend(VTrackr.prototype, {
 	},
 
 	find: function(selector) {
-		var el = this._node;
+		var el = this.node;
 
 		if (el) {
 			if (el.nodeType === 1 && matchesSelector(el, selector)) return el;
@@ -93,8 +143,12 @@ _.extend(VTrackr.prototype, {
 });
 
 // proxy a few computation methods
-["invalidate","onInvalidate","stop"].forEach(function(method) {
+["invalidate","onInvalidate"].forEach(function(method) {
 	VTrackr.prototype[method] = function() {
+		if (!this.comp) {
+			throw new Error("Cannot run " + method + "(). This VTrackr is not mounted.");
+		}
+
 		this.comp[method].apply(this.comp, arguments);
 		return this;
 	}
