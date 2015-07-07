@@ -13,7 +13,7 @@
 	"main": "index.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tyler-johnson/virtual-trackr.git"
+		"url": "https://github.com/BeneathTheInk/virtual-trackr.git"
 	},
 	"scripts": {
 		"prepublish": "grunt"

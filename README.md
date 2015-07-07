@@ -4,7 +4,7 @@
 
 ## Install
 
-Download a UMD bundle from the [releases page](https://github.com/tyler-johnson/virtual-trackr/releases). The variable `vtrackr` will be attached to `window`.
+Download a UMD bundle from the [releases page](https://github.com/BeneathTheInk/virtual-trackr/releases). The variable `vtrackr` will be attached to `window`.
 
 ```html
 <script type="text/javascript" src="trackr.js"></script>
