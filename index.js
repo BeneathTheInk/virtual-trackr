@@ -81,6 +81,7 @@ VTrackr.prototype.init = function() {
 
 VTrackr.prototype.update = function(previous, node) {
 	var prevtree = previous && previous._tree;
+	if (previous) previous.destroy();
 	if (!prevtree || !node) return this.init();
 
 	// basically, don't be switching trees without calling destroy
