@@ -3,10 +3,8 @@
 	"version": "0.1.0",
 	"main": "index.js",
 	"dependencies": {
-		"backbone-extend-standalone": "~0.1.2",
 		"matches-selector": "~1.0.0",
 		"trackr": "~1.0.3",
-		"underscore": "~1.8.3",
 		"virtual-dom": "~2.0.1"
 	}
 }
