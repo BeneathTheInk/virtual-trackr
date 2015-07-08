@@ -29,8 +29,7 @@ VTrackr.prototype.mount = function() {
 	this.stop();
 
 	this.comp = this.autorun(function(comp) {
-		var newtree = this.render.call(this, comp),
-			oldNode;
+		var newtree = this.render(comp);
 
 		if (typeof newtree === "string") {
 			newtree = new VText(newtree);
@@ -66,12 +65,7 @@ VTrackr.prototype.refresh = function() {
 
 	// otherwise patch and apply new tree
 	else {
-		var oldNode = this.node;
-		this.node = patch(oldNode, diff(this._tree, this._latestTree));
-
-		if (this.node !== oldNode && oldNode.parentNode) {
-			oldNode.parentNode.replaceChild(this.node, oldNode);
-		}
+		this.node = patch(this.node, diff(this._tree, this._latestTree));
 	}
 
 	this._tree = this._latestTree;
